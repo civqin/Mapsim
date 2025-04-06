@@ -322,8 +322,37 @@ def run_simulation(closed_link_ids=None, use_original_results=False):
         raise
 
 if __name__ == "__main__":
-    # 设置封禁的路段ID
-    closed_link_ids = ['11']  # 示例：封禁11号路段
-    
-    # 运行模拟
-    results = run_simulation(closed_link_ids) 
+    try:
+        # 定义要封禁的路段
+        closed_links = ['11_1', '11_2', '11_3', '11_4', '11_5']
+        
+        # 检查是否存在原始模拟结果
+        use_original = os.path.exists('original_simulation.pkl')
+        
+        if not use_original:
+            # 运行原始模拟
+            print("运行原始模拟...")
+            W_original = run_simulation()
+            print("\n原始模拟结果:")
+            W_original.analyzer.print_simple_stats()
+        else:
+            print("找到原始模拟结果，跳过原始模拟...")
+        
+        # 运行封禁路段的模拟
+        print(f"\n运行路段 {', '.join(closed_links)} 封禁的模拟...")
+        W_closed = run_simulation(closed_links)
+        print(f"\n路段封禁后的模拟结果:")
+        W_closed.analyzer.print_simple_stats()
+        
+        # 可视化结果
+        print("\n生成动画...")
+        W_closed.analyzer.network_anim(animation_speed_inverse=15, detailed=0, network_font_size=0)
+        W_closed.analyzer.network_fancy(animation_speed_inverse=15, sample_ratio=0.1, interval=10, trace_length=5, speed_coef=4)
+        
+        # 清理临时文件
+        if os.path.exists('matsim/links_closed.csv'):
+            os.remove('matsim/links_closed.csv')
+            
+    except Exception as e:
+        print(f"\n发生错误: {str(e)}")
+        print("请检查输入数据和参数是否正确")
